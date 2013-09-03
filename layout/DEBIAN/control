@@ -1,0 +1,11 @@
+Package: com.Bader.Pull-To-Disable-Alarms
+Name: Pull To Disable Alarms
+Depends: firmware (>= 6.0), mobilesubstrate, preferenceloader
+Version: 1.2-1
+Architecture: iphoneos-arm
+Description: 
+Maintainer: Bader
+dev: Bader
+Priority: optional
+Author: Bader <BaderCydiaSupport@hotmail.com>
+Section: Tweaks

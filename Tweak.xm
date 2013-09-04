@@ -1,11 +1,6 @@
 #import <UIKit/UIKit.h>
 #include <substrate.h>
 
-#define kPullToRefreshTag 965
-
-static BOOL PTDAPullToActivateEnabled;
-static NSInteger activeAlarmCount;
-
 @interface AlarmManager
 + (id)sharedManager;
 @property(readonly, retain, nonatomic) NSArray *alarms;
@@ -22,13 +17,17 @@ static NSInteger activeAlarmCount;
 - (void)BHPTDAUpdateUI;
 @end
 
+#define kPullToRefreshTag 965
+
+static BOOL PTDAPullToActivateEnabled;
+static NSInteger activeAlarmCount;
 
 static void SettingsCallback()
 {
     NSDictionary *settings = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.Bader.PullToDisableAlarms.plist"];
     id temp = [settings objectForKey:@"PTDAPullToActivateEnabled"];
     PTDAPullToActivateEnabled = (temp) ? [temp boolValue] : YES;
-	[settings release];
+    [settings release];
 }
 
 
@@ -38,7 +37,7 @@ static void SettingsCallback()
 {
     // If you switch fast enough, the settings darwin notif wont be served in time(!).
     %orig(arg1);
-	SettingsCallback();
+    SettingsCallback();
 	
 }
 %end
@@ -49,16 +48,15 @@ static void SettingsCallback()
     %orig;
     UIRefreshControl *pullToRefreshControl = [[UIRefreshControl alloc] init];
     pullToRefreshControl.tintColor = [UIColor clearColor];
-	pullToRefreshControl.tag = kPullToRefreshTag;  // Hacky
+    pullToRefreshControl.tag = kPullToRefreshTag;  // Hacky
     [pullToRefreshControl addTarget:self
                              action:@selector(handleRefresh:)
                    forControlEvents:UIControlEventValueChanged];
 	
-    
-	UITableView *theTableView = MSHookIvar<UITableView *>(self, "_tableView");
+    UITableView *theTableView = MSHookIvar<UITableView *>(self, "_tableView");
     [theTableView addSubview:pullToRefreshControl];
 	
-	[pullToRefreshControl release];
+    [pullToRefreshControl release];
 }
 
 - (id)view
@@ -71,24 +69,23 @@ static void SettingsCallback()
 
 - (void)activeChangedForAlarm:(id)alarm active:(BOOL)active
 {
-	BOOL shouldUpdateUI = NO;   // update UI in 0->1 and 1->0 edges only.
+    BOOL shouldUpdateUI = NO;   // update UI in 0->1 and 1->0 edges only.
     
-	if (active) {
-		if (++activeAlarmCount == 1) // 0 -> 1.
-			shouldUpdateUI = YES;
+    if (active) {
+        if (++activeAlarmCount == 1) // 0 -> 1.
+            shouldUpdateUI = YES;
 	
-	} else {
-		if (--activeAlarmCount <= 0) // 1 -> 0.
-			shouldUpdateUI = YES;
-	}
-       
-   if (activeAlarmCount < 0) // Will never occur, but just to be safe.
-       activeAlarmCount = 0;
-           
+    } else {
+        if (--activeAlarmCount <= 0) { // 1 -> 0.
+            shouldUpdateUI = YES;
+            activeAlarmCount = 0;
+        }
+    }
+
     %orig(alarm,active);
 	
-	if (shouldUpdateUI)
-	    [self performSelectorOnMainThread:@selector(BHPTDAUpdateUI) withObject:nil waitUntilDone:YES];
+    if (shouldUpdateUI)
+        [self performSelectorOnMainThread:@selector(BHPTDAUpdateUI) withObject:nil waitUntilDone:YES];
 }
 
 
@@ -97,13 +94,13 @@ static void SettingsCallback()
 {
 	
     NSString *pullString = (activeAlarmCount < 1 && PTDAPullToActivateEnabled) ? @"Pull Down To Enable Alarms" :
-    																			 @"Pull Down To Disable Alarms";
-	NSAttributedString *attPullString = [[NSAttributedString alloc] initWithString:pullString];
+                                                                                 @"Pull Down To Disable Alarms";
+    NSAttributedString *attPullString = [[NSAttributedString alloc] initWithString:pullString];
 	
-	UITableView *theTableView = MSHookIvar<UITableView *>(self, "_tableView");
-	((UIRefreshControl *)[theTableView viewWithTag:kPullToRefreshTag]).attributedTitle = attPullString;
+    UITableView *theTableView = MSHookIvar<UITableView *>(self, "_tableView");
+    ((UIRefreshControl *)[theTableView viewWithTag:kPullToRefreshTag]).attributedTitle = attPullString;
 
-	[attPullString release];
+    [attPullString release];
 }
 
 
@@ -116,20 +113,18 @@ static void SettingsCallback()
         // Disable all active alarms.
         for (id anAlarm in myAlarms){
             if ([anAlarm isActive]){
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^(void){
-					[self activeChangedForAlarm:anAlarm active:NO];
-			        dispatch_async(dispatch_get_main_queue(), ^{
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_NORMAL, 0), ^(void){
+                    [self activeChangedForAlarm:anAlarm active:NO];
+                    dispatch_async(dispatch_get_main_queue(), ^{
                         [self alarmDidUpdate:anAlarm];
-                        
-			        });
+                    });
                 });
             }
         }
-        
  
     } else if (PTDAPullToActivateEnabled) {
         for (id anAlarm in myAlarms){
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^(void){
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_NORMAL, 0), ^(void){
                 [self activeChangedForAlarm:anAlarm active:YES];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self alarmDidUpdate:anAlarm];
@@ -137,7 +132,6 @@ static void SettingsCallback()
                 });
             });
         }
-        
     }
     [(UIRefreshControl *)sender endRefreshing];
 }

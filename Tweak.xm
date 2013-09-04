@@ -145,8 +145,7 @@ static void SettingsCallback()
         if ([anAlarm isActive]){
             activeAlarmCount += 1;
         }
-    }
-    
+    } 
 }
 %end
 

@@ -113,7 +113,7 @@ static void SettingsCallback()
         // Disable all active alarms.
         for (id anAlarm in myAlarms){
             if ([anAlarm isActive]){
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_NORMAL, 0), ^(void){
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^(void){
                     [self activeChangedForAlarm:anAlarm active:NO];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self alarmDidUpdate:anAlarm];
@@ -124,7 +124,7 @@ static void SettingsCallback()
  
     } else if (PTDAPullToActivateEnabled) {
         for (id anAlarm in myAlarms){
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_NORMAL, 0), ^(void){
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^(void){
                 [self activeChangedForAlarm:anAlarm active:YES];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self alarmDidUpdate:anAlarm];
